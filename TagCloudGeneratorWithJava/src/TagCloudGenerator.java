@@ -1,3 +1,9 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Comparator;
 
 import components.map.Map;
@@ -5,10 +11,6 @@ import components.map.Map.Pair;
 import components.map.Map1L;
 import components.queue.Queue;
 import components.queue.Queue2;
-import components.simplereader.SimpleReader;
-import components.simplereader.SimpleReader1L;
-import components.simplewriter.SimpleWriter;
-import components.simplewriter.SimpleWriter1L;
 import components.sortingmachine.SortingMachine;
 import components.sortingmachine.SortingMachine2;
 import components.utilities.Reporter;
@@ -41,7 +43,7 @@ public final class TagCloudGenerator {
      * @ensures <pre> out.is.open and output.content = #out.content *
      * [tag cloud headers] </pre>
      */
-    private static void indexHeaders(SimpleWriter out, String inName, int n) {
+    private static void indexHeaders(PrintWriter out, String inName, int n) {
         out.println("<!DOCTYPE html>\n<html>\n<head>");
         out.println("\t<title>Tag Cloud</title>");
 
@@ -82,27 +84,33 @@ public final class TagCloudGenerator {
      *            input stream
      * @return a map containing words and their counts
      */
-    private static Map<String, Integer> repeatedWords(SimpleReader in) {
+    private static Map<String, Integer> repeatedWords(BufferedReader in) {
         Map<String, Integer> map = new Map1L<>();
 
         //conver to lowercase for each word in input stream
-        while (!in.atEOS()) {
-            String line = in.nextLine();
-            String[] words = line.split("[ \t\n\r,-.!?\\[\\]';:/()]+");
-            for (String word : words) {
-                if (!word.isEmpty()) {
-                    String lowerCaseWord = word.toLowerCase();
-                    //update map with word count and increment if already present
-                    //otherwise, just add count of 1
-                    if (map.hasKey(lowerCaseWord)) {
-                        map.replaceValue(lowerCaseWord,
-                                map.value(lowerCaseWord) + 1);
-                    } else {
-                        map.add(lowerCaseWord, 1);
+        try {
+            String line;
+            while (!in.atEOS()) {
+                String[] words = line.split("[ \t\n\r,-.!?\\[\\]';:/()]+");
+                for (String word : words) {
+                    if (!word.isEmpty()) {
+                        String lowerCaseWord = word.toLowerCase();
+                        //update map with word count and increment if already present
+                        //otherwise, just add count of 1
+                        if (map.hasKey(lowerCaseWord)) {
+                            map.replaceValue(lowerCaseWord,
+                                    map.value(lowerCaseWord) + 1);
+                        } else {
+                            map.add(lowerCaseWord, 1);
+                        }
                     }
                 }
             }
+        } catch (IOException error) {
+            System.err.println(
+                    "Error: could not read input: " + error.getMessage());
         }
+
         return map;
     }
 
@@ -120,7 +128,7 @@ public final class TagCloudGenerator {
      * @ensures <pre> out.content = #out.content * [print out words in tag cloud
      * format] </pre>
      */
-    private static void tagCloud(Map<String, Integer> map, SimpleWriter out,
+    private static void tagCloud(Map<String, Integer> map, PrintWriter out,
             int n) {
         out.println("<div class=\"cdiv\">");
         out.println("<p class = \"cbox\">");
@@ -272,35 +280,40 @@ public final class TagCloudGenerator {
      * @param args
      */
     public static void main(String[] args) {
-        SimpleReader in = new SimpleReader1L();
-        SimpleWriter out = new SimpleWriter1L();
+        BufferedReader in;
+        PrintWriter out;
 
         //prompts user for input and output file names
-        out.print("Enter the name of an input file: ");
-        String inputFile = in.nextLine();
-        SimpleReader input = new SimpleReader1L(inputFile);
-        Reporter.assertElseFatalError(input.isOpen(), "invalid input file");
+        try {
+            out.print("Enter the name of an input file: ");
+            String inputFile = in.nextLine();
+            in = new BufferedReader(new FileReader(inputFile));
+            Reporter.assertElseFatalError(input.isOpen(), "invalid input file");
 
-        out.print("Enter the name of the output HTML file: ");
-        String outputFile = in.nextLine();
-        SimpleWriter output = new SimpleWriter1L(outputFile);
+            out.print("Enter the name of the output HTML file: ");
+            String outputFile = in.nextLine();
+            out = new PrintWriter(
+                    new BufferedWriter(new FileWriter(outputFile)));
 
-        out.print("Enter the number of words to include in the Tag Cloud: ");
-        int n = in.nextInteger();
+            out.print(
+                    "Enter the number of words to include in the Tag Cloud: ");
+            int n = in.nextInteger();
 
-        Reporter.assertElseFatalError(n > 0,
-                "Number of words must be positive (n > 0).");
+            Reporter.assertElseFatalError(n > 0,
+                    "Number of words must be positive (n > 0).");
 
-        //generates HTML headers for output file
-        indexHeaders(output, inputFile, n);
+            //generates HTML headers for output file
+            indexHeaders(out, inputFile, n);
 
-        //processes input file, counts words, and generates tag cloud
-        Map<String, Integer> map = repeatedWords(input);
-        tagCloud(map, output, n);
+            //processes input file, counts words, and generates tag cloud
+            Map<String, Integer> map = repeatedWords(in);
+            tagCloud(map, out, n);
+
+        } catch (IOException error) {
+            System.err.println("ERROR");
+        }
 
         in.close();
         out.close();
-        input.close();
-        output.close();
     }
 }
