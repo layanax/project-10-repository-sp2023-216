@@ -294,7 +294,7 @@ public final class TagCloudGenerator {
         //generates HTML headers for output file
         indexHeaders(output, inputFile, n);
 
-        //process input file, count words, and generate tag cloud
+        //processes input file, counts words, and generates tag cloud
         Map<String, Integer> map = repeatedWords(input);
         tagCloud(map, output, n);
 
