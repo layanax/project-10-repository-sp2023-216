@@ -8,8 +8,6 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -94,85 +92,32 @@ public final class TagCloudGenerator {
      */
     private static Map<String, Integer> repeatedWords(BufferedReader in) {
         Map<String, Integer> map = new HashMap<>();
-//
-//        try {
-//            String line = in.readLine();
-//            int x = 1000000;
-//            while (x > 0) {
-//                x--;
-//                String[] words = line.split("[ \t\n\r,-.!?\\[\\]';:/()]+");
-//                for (String word : words) {
-//                    if (!word.isEmpty()) {
-//                        String lowerCaseWord = word.toLowerCase();
-//                        //update map with word count and increment if already present
-//                        //otherwise, just add count of 1
-//                        if (map.containsKey(lowerCaseWord)) {
-//                            map.replace(lowerCaseWord,
-//                                    map.get(lowerCaseWord) + 1);
-//                        } else {
-//                            map.put(lowerCaseWord, 1);
-//                        }
-//                    }
-//                }
-//            }
-//        } catch (IOException error) {
-//            System.err.println(
-//                    "Error: could not read input: " + error.getMessage());
-//        }
-        
-        String str = "[ \t\n\r,-.!?\\[\\]';:/()]+";
-        
-        Set<Character> separators = new HashSet<Character>();
-        for (int i = 0; i < str.length(); i++) {
-            if (!separators.contains(str.charAt(i))) {
-                separators.add(str.charAt(i));
-            }
-        }
-        /*
-         * Due to string limitations, then add ".
-         */
-        separators.add('"');
-        
-        String line = in.readLine();
-        while (line != null) {
-            line = line.toLowerCase();
-            int position = 0;
-            while (position < line.length()) {
-                /*
-                 * Declared as "word" for simplicity, even though it could also
-                 * be a separator.
-                 */
-                
-                boolean isSeparator = separators.contains(line.charAt(position));
-                /*
-                 * Increase position until the next char is a separator.
-                 */
-                int finalPosition = position + 1;
-                while (finalPosition < line.length() && (separators
-                        .contains(line.charAt(finalPosition)) == isSeparator)) {
-                    finalPosition++;
-                }
-                
-                
-                String word = line.substring(position, finalPosition);
-                if (!separators.contains(word.charAt(0))) {
-                    if (!map.containsKey(word)) {
-                        map.put(word, 1);
-                    } else {
-                        int newCount = map.get(word) + 1;
-                        map.remove(word);
-                        map.put(word, newCount);
+
+        try {
+            String line = in.readLine();
+            while (line != null) {
+                String[] words = line.split("[ \t\n\r,-.!?\\[\\]';:/()]+");
+                for (String word : words) {
+                    if (!word.isEmpty()) {
+                        String lowerCaseWord = word.toLowerCase();
+                        //update map with word count and increment if already present
+                        //otherwise, just add count of 1
+                        if (map.containsKey(lowerCaseWord)) {
+                            map.replace(lowerCaseWord,
+                                    map.get(lowerCaseWord) + 1);
+                        } else {
+                            map.put(lowerCaseWord, 1);
+                        }
                     }
                 }
-                /*
-                 * Update position in line.
-                 */
-                position += word.length();
+                line = in.readLine();
             }
-            line = in.readLine();
+        } catch (IOException error) {
+            System.err.println(
+                    "Error: could not read input: " + error.getMessage());
         }
-
         return map;
+
     }
 
     /**
@@ -274,31 +219,17 @@ public final class TagCloudGenerator {
                 map.entrySet());
         Collections.sort(list, countOrder);
 
-        Map<String, Integer> sortedMap = new HashMap<String, Integer>();
-        for (Iterator<Map.Entry<String, Integer>> it = list.iterator(); it
-                .hasNext();) {
-            Map.Entry<String, Integer> entry = it.next();
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
+        List<Map.Entry<String, Integer>> list2 = list.subList(0, n);
 
         Comparator<Entry<String, Integer>> alphabeticalOrder = new WordComparator();
-        List<Map.Entry<String, Integer>> list2 = new LinkedList<Map.Entry<String, Integer>>(
-                map.entrySet());
-        Collections.sort(list, alphabeticalOrder);
-
-        Map<String, Integer> sortedMapAlphabetically = new HashMap<String, Integer>();
-        for (Iterator<Map.Entry<String, Integer>> it = list2.iterator(); it
-                .hasNext();) {
-            Map.Entry<String, Integer> entry = it.next();
-            sortedMapAlphabetically.put(entry.getKey(), entry.getValue());
-        }
+        Collections.sort(list2, alphabeticalOrder);
 
         Queue<Map.Entry<String, Integer>> queue = new LinkedList<Map.Entry<String, Integer>>();
 
-        Set<Map.Entry<String, Integer>> MapSeq = map.entrySet();
-        for (Map.Entry<String, Integer> temp : MapSeq) {
-            queue.add(temp);
+        for (int i = 0; i < list2.size(); i++) {
+            queue.add(list2.get(i));
         }
+
         return queue;
 
     }
