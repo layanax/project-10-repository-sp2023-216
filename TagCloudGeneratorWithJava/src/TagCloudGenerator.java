@@ -3,17 +3,25 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Queue;
+import java.util.Set;
 
-import components.map.Map;
-import components.map.Map.Pair;
-import components.map.Map1L;
-import components.queue.Queue;
-import components.queue.Queue2;
-import components.sortingmachine.SortingMachine;
-import components.sortingmachine.SortingMachine2;
 import components.utilities.Reporter;
+
+//PROBLEMS AND QUESTIONS
+// is it ok to not use a sorting machine anymore and instead use collections.sort?
+// figure out how to not use reporter becuase that is part of components
 
 /**
  * TagCloudGenerator generates an HTML file displaying a tag cloud from an input
@@ -85,30 +93,83 @@ public final class TagCloudGenerator {
      * @return a map containing words and their counts
      */
     private static Map<String, Integer> repeatedWords(BufferedReader in) {
-        Map<String, Integer> map = new Map1L<>();
-
-        //conver to lowercase for each word in input stream
-        try {
-            String line;
-            while (!in.atEOS()) {
-                String[] words = line.split("[ \t\n\r,-.!?\\[\\]';:/()]+");
-                for (String word : words) {
-                    if (!word.isEmpty()) {
-                        String lowerCaseWord = word.toLowerCase();
-                        //update map with word count and increment if already present
-                        //otherwise, just add count of 1
-                        if (map.hasKey(lowerCaseWord)) {
-                            map.replaceValue(lowerCaseWord,
-                                    map.value(lowerCaseWord) + 1);
-                        } else {
-                            map.add(lowerCaseWord, 1);
-                        }
+        Map<String, Integer> map = new HashMap<>();
+//
+//        try {
+//            String line = in.readLine();
+//            int x = 1000000;
+//            while (x > 0) {
+//                x--;
+//                String[] words = line.split("[ \t\n\r,-.!?\\[\\]';:/()]+");
+//                for (String word : words) {
+//                    if (!word.isEmpty()) {
+//                        String lowerCaseWord = word.toLowerCase();
+//                        //update map with word count and increment if already present
+//                        //otherwise, just add count of 1
+//                        if (map.containsKey(lowerCaseWord)) {
+//                            map.replace(lowerCaseWord,
+//                                    map.get(lowerCaseWord) + 1);
+//                        } else {
+//                            map.put(lowerCaseWord, 1);
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (IOException error) {
+//            System.err.println(
+//                    "Error: could not read input: " + error.getMessage());
+//        }
+        
+        String str = "[ \t\n\r,-.!?\\[\\]';:/()]+";
+        
+        Set<Character> separators = new HashSet<Character>();
+        for (int i = 0; i < str.length(); i++) {
+            if (!separators.contains(str.charAt(i))) {
+                separators.add(str.charAt(i));
+            }
+        }
+        /*
+         * Due to string limitations, then add ".
+         */
+        separators.add('"');
+        
+        String line = in.readLine();
+        while (line != null) {
+            line = line.toLowerCase();
+            int position = 0;
+            while (position < line.length()) {
+                /*
+                 * Declared as "word" for simplicity, even though it could also
+                 * be a separator.
+                 */
+                
+                boolean isSeparator = separators.contains(line.charAt(position));
+                /*
+                 * Increase position until the next char is a separator.
+                 */
+                int finalPosition = position + 1;
+                while (finalPosition < line.length() && (separators
+                        .contains(line.charAt(finalPosition)) == isSeparator)) {
+                    finalPosition++;
+                }
+                
+                
+                String word = line.substring(position, finalPosition);
+                if (!separators.contains(word.charAt(0))) {
+                    if (!map.containsKey(word)) {
+                        map.put(word, 1);
+                    } else {
+                        int newCount = map.get(word) + 1;
+                        map.remove(word);
+                        map.put(word, newCount);
                     }
                 }
+                /*
+                 * Update position in line.
+                 */
+                position += word.length();
             }
-        } catch (IOException error) {
-            System.err.println(
-                    "Error: could not read input: " + error.getMessage());
+            line = in.readLine();
         }
 
         return map;
@@ -136,28 +197,30 @@ public final class TagCloudGenerator {
         //sorted queue of map pairs based on counts
 
         //calculate font sizes for tag cloud
-        int maxCount = map.value(map.iterator().next().key());
+        int maxCount = Integer.MIN_VALUE;
         int minCount = Integer.MAX_VALUE;
-        for (Map.Pair<String, Integer> entry : map) {
-            int count = entry.value();
+        Set<String> MapSeq = map.keySet();
+        for (String i : MapSeq) {
+
+            int count = map.get(i);
             maxCount = Math.max(maxCount, count);
             minCount = Math.min(minCount, count);
         }
 
-        Queue<Map.Pair<String, Integer>> sortedWords = createSortedQueue(map,
+        Queue<Map.Entry<String, Integer>> sortedWords = createSortedQueue(map,
                 n);
 
-        while (sortedWords.length() > 0) {
-            Map.Pair<String, Integer> entry = sortedWords.dequeue();
-            String word = entry.key();
-            int count = entry.value();
+        while (sortedWords.size() > 0) {
+            Map.Entry<String, Integer> entry = sortedWords.remove();
+            String word = entry.getKey();
+            int count = entry.getValue();
 
             //calculates font size based on count
             int fontSize = calculateFontSize(count, minCount, maxCount);
 
             //outputs word with correct font size
             out.println("<span style=\"cursor:default\" class = \" f" + fontSize
-                    + "\" title = \"count: " + entry.value() + "\">" + word
+                    + "\" title = \"count: " + entry.getValue() + "\">" + word
                     + "</span>");
         }
         out.println("</p>");
@@ -203,60 +266,54 @@ public final class TagCloudGenerator {
      * @requires map is not modified during the execution of this
      * @return a queue of words sorted into alphabetical order
      */
-    private static Queue<Map.Pair<String, Integer>> createSortedQueue(
+    private static Queue<Map.Entry<String, Integer>> createSortedQueue(
             Map<String, Integer> map, int n) {
-        Comparator<Pair<String, Integer>> countOrder = new CountComparator();
-        SortingMachine<Map.Pair<String, Integer>> countSort;
-        countSort = new SortingMachine2<Map.Pair<String, Integer>>(countOrder);
+        Comparator<Entry<String, Integer>> countOrder = new CountComparator();
 
-        //move entries from map to sorting machine
-        while (map.size() > 0) {
-            countSort.add(map.removeAny());
-        }
-        countSort.changeToExtractionMode();
+        List<Map.Entry<String, Integer>> list = new LinkedList<Map.Entry<String, Integer>>(
+                map.entrySet());
+        Collections.sort(list, countOrder);
 
-        //sort alphabetically
-        Comparator<Pair<String, Integer>> alphabeticalOrder = new WordComparator();
-        SortingMachine<Map.Pair<String, Integer>> letterSort;
-        letterSort = new SortingMachine2<Map.Pair<String, Integer>>(
-                alphabeticalOrder);
-
-        //add entry with highest count to sorted queue
-        if (countSort.size() > 0) {
-            Map.Pair<String, Integer> maxPair = countSort.removeFirst();
-            letterSort.add(maxPair);
+        Map<String, Integer> sortedMap = new HashMap<String, Integer>();
+        for (Iterator<Map.Entry<String, Integer>> it = list.iterator(); it
+                .hasNext();) {
+            Map.Entry<String, Integer> entry = it.next();
+            sortedMap.put(entry.getKey(), entry.getValue());
         }
 
-        //continue adding until required number
-        int topCounter = 0;
-        while (topCounter < n && countSort.size() >= 2) {
-            Map.Pair<String, Integer> wordAndCount = countSort.removeFirst();
-            letterSort.add(wordAndCount);
-            topCounter++;
+        Comparator<Entry<String, Integer>> alphabeticalOrder = new WordComparator();
+        List<Map.Entry<String, Integer>> list2 = new LinkedList<Map.Entry<String, Integer>>(
+                map.entrySet());
+        Collections.sort(list, alphabeticalOrder);
+
+        Map<String, Integer> sortedMapAlphabetically = new HashMap<String, Integer>();
+        for (Iterator<Map.Entry<String, Integer>> it = list2.iterator(); it
+                .hasNext();) {
+            Map.Entry<String, Integer> entry = it.next();
+            sortedMapAlphabetically.put(entry.getKey(), entry.getValue());
         }
 
-        letterSort.changeToExtractionMode();
-        Queue<Map.Pair<String, Integer>> queue = new Queue2<Map.Pair<String, Integer>>();
+        Queue<Map.Entry<String, Integer>> queue = new LinkedList<Map.Entry<String, Integer>>();
 
-        //move sorted entries from sorting machine to queue
-        while (letterSort.size() > 0) {
-            queue.enqueue(letterSort.removeFirst());
+        Set<Map.Entry<String, Integer>> MapSeq = map.entrySet();
+        for (Map.Entry<String, Integer> temp : MapSeq) {
+            queue.add(temp);
         }
-
         return queue;
+
     }
 
     /**
      * A comparator for sorting words by their counts in descending order.
      */
     private static class CountComparator
-            implements Comparator<Map.Pair<String, Integer>> {
+            implements Comparator<Map.Entry<String, Integer>> {
         @Override
-        public int compare(Map.Pair<String, Integer> pair1,
-                Map.Pair<String, Integer> pair2) {
+        public int compare(Map.Entry<String, Integer> pair1,
+                Map.Entry<String, Integer> pair2) {
 
             //sorts by count in descending order
-            return pair2.value() - pair1.value();
+            return pair2.getValue() - pair1.getValue();
         }
     }
 
@@ -264,13 +321,13 @@ public final class TagCloudGenerator {
      * A comparator for sorting words alphabetically.
      */
     private static class WordComparator
-            implements Comparator<Map.Pair<String, Integer>> {
+            implements Comparator<Map.Entry<String, Integer>> {
         @Override
-        public int compare(Map.Pair<String, Integer> pair1,
-                Map.Pair<String, Integer> pair2) {
+        public int compare(Map.Entry<String, Integer> pair1,
+                Map.Entry<String, Integer> pair2) {
 
             //sorts alphabetically
-            return pair1.key().compareTo(pair2.key());
+            return pair1.getKey().compareTo(pair2.getKey());
         }
     }
 
@@ -282,22 +339,24 @@ public final class TagCloudGenerator {
     public static void main(String[] args) {
         BufferedReader in;
         PrintWriter out;
+        BufferedReader input = new BufferedReader(
+                new InputStreamReader(System.in));
 
         //prompts user for input and output file names
         try {
-            out.print("Enter the name of an input file: ");
-            String inputFile = in.nextLine();
+            System.out.print("Enter the name of an input file: ");
+            String inputFile = input.readLine();
             in = new BufferedReader(new FileReader(inputFile));
-            Reporter.assertElseFatalError(input.isOpen(), "invalid input file");
+            Reporter.assertElseFatalError(in.ready(), "invalid input file");
 
-            out.print("Enter the name of the output HTML file: ");
-            String outputFile = in.nextLine();
+            System.out.print("Enter the name of the output HTML file: ");
+            String outputFile = input.readLine();
             out = new PrintWriter(
                     new BufferedWriter(new FileWriter(outputFile)));
 
-            out.print(
+            System.out.print(
                     "Enter the number of words to include in the Tag Cloud: ");
-            int n = in.nextInteger();
+            int n = Integer.parseInt(input.readLine());
 
             Reporter.assertElseFatalError(n > 0,
                     "Number of words must be positive (n > 0).");
@@ -309,11 +368,14 @@ public final class TagCloudGenerator {
             Map<String, Integer> map = repeatedWords(in);
             tagCloud(map, out, n);
 
+            in.close();
+            out.close();
+
         } catch (IOException error) {
             System.err.println("ERROR");
         }
 
-        in.close();
-        out.close();
+        System.out.println("finished!");
+
     }
 }
