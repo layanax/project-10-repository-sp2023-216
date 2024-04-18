@@ -15,8 +15,6 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
-import components.utilities.Reporter;
-
 //PROBLEMS AND QUESTIONS
 // is it ok to not use a sorting machine anymore and instead use collections.sort?
 // figure out how to not use reporter becuase that is part of components
@@ -146,7 +144,6 @@ public final class TagCloudGenerator {
         int minCount = Integer.MAX_VALUE;
         Set<String> MapSeq = map.keySet();
         for (String i : MapSeq) {
-
             int count = map.get(i);
             maxCount = Math.max(maxCount, count);
             minCount = Math.min(minCount, count);
@@ -268,30 +265,43 @@ public final class TagCloudGenerator {
      * @param args
      */
     public static void main(String[] args) {
-        BufferedReader in;
-        PrintWriter out;
+        BufferedReader in = null;
+        PrintWriter out = null;
         BufferedReader input = new BufferedReader(
                 new InputStreamReader(System.in));
 
+        String inputFile = "";
+        String outputFile = "";
+        int n = 0;
         //prompts user for input and output file names
         try {
             System.out.print("Enter the name of an input file: ");
-            String inputFile = input.readLine();
+            inputFile = input.readLine();
             in = new BufferedReader(new FileReader(inputFile));
-            Reporter.assertElseFatalError(in.ready(), "invalid input file");
+        } catch (IOException error) {
+            System.out.println("invalid input file: " + error);
+        }
 
+        try {
             System.out.print("Enter the name of the output HTML file: ");
-            String outputFile = input.readLine();
+            outputFile = input.readLine();
             out = new PrintWriter(
                     new BufferedWriter(new FileWriter(outputFile)));
+        } catch (IOException error) {
+            System.out.println("Invalid output file");
+        }
 
+        try {
             System.out.print(
                     "Enter the number of words to include in the Tag Cloud: ");
-            int n = Integer.parseInt(input.readLine());
+            n = Integer.parseInt(input.readLine());
+        } catch (IOException error) {
+            System.out.println("error reading inputed number");
+        }
 
-            Reporter.assertElseFatalError(n > 0,
-                    "Number of words must be positive (n > 0).");
-
+        if (n <= 0) {
+            System.out.println("Invalid number of words must be > 0");
+        } else {
             //generates HTML headers for output file
             indexHeaders(out, inputFile, n);
 
@@ -299,14 +309,17 @@ public final class TagCloudGenerator {
             Map<String, Integer> map = repeatedWords(in);
             tagCloud(map, out, n);
 
-            in.close();
-            out.close();
+            try {
+                in.close();
+                out.close();
+            }
 
-        } catch (IOException error) {
-            System.err.println("ERROR");
+            catch (IOException error) {
+                System.err.println("error closing files");
+            }
+
+            System.out.println("finished!");
+
         }
-
-        System.out.println("finished!");
-
     }
 }
