@@ -306,7 +306,7 @@ public final class TagCloudGenerator {
             System.err.println("ERROR");
         }
 
-        System.out.println("finished!");
+        System.out.println("Tag Cloud created!");
 
     }
 }
