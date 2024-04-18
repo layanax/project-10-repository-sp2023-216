@@ -15,7 +15,6 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
-//test
 /**
  * TagCloudGenerator generates an HTML file displaying a tag cloud from an input
  * text file.
@@ -134,20 +133,18 @@ public final class TagCloudGenerator {
         out.println("<div class=\"cdiv\">");
         out.println("<p class = \"cbox\">");
 
-        //sorted queue of map pairs based on counts
-
         //calculate font sizes for tag cloud
         int maxCount = Integer.MIN_VALUE;
         int minCount = Integer.MAX_VALUE;
-        Set<String> MapSeq = map.keySet();
-        for (String i : MapSeq) {
+        Set<String> mapSeq = map.keySet();
+        for (String i : mapSeq) {
             int count = map.get(i);
             maxCount = Math.max(maxCount, count);
             minCount = Math.min(minCount, count);
         }
 
-        Queue<Map.Entry<String, Integer>> sortedWords = createSortedQueue(map,
-                n);
+        //sorted queue of map pairs based on counts
+        Queue<Map.Entry<String, Integer>> sortedWords = createSortedQueue(map, n);
 
         while (sortedWords.size() > 0) {
             Map.Entry<String, Integer> entry = sortedWords.remove();
@@ -207,13 +204,13 @@ public final class TagCloudGenerator {
      */
     private static Queue<Map.Entry<String, Integer>> createSortedQueue(
             Map<String, Integer> map, int n) {
-        Comparator<Entry<String, Integer>> countOrder = new CountComparator();
+        Comparator<Map.Entry<String, Integer>> countOrder = new CountComparator();
 
-        List<Map.Entry<String, Integer>> list = new LinkedList<Map.Entry<String, Integer>>(
+        List<Map.Entry<String, Integer>> list1 = new LinkedList<Map.Entry<String, Integer>>(
                 map.entrySet());
-        Collections.sort(list, countOrder);
+        Collections.sort(list1, countOrder);
 
-        List<Map.Entry<String, Integer>> list2 = list.subList(0, n);
+        List<Map.Entry<String, Integer>> list2 = list1.subList(0, n);
 
         Comparator<Entry<String, Integer>> alphabeticalOrder = new WordComparator();
         Collections.sort(list2, alphabeticalOrder);
@@ -238,7 +235,13 @@ public final class TagCloudGenerator {
                 Map.Entry<String, Integer> pair2) {
 
             //sorts by count in descending order
-            return pair2.getValue() - pair1.getValue();
+            int result = pair2.getValue().compareTo(pair1.getValue());
+
+            if (result == 0) {
+                result = pair1.getKey().compareTo(pair2.getKey());
+            }
+
+            return result;
         }
     }
 
@@ -252,7 +255,13 @@ public final class TagCloudGenerator {
                 Map.Entry<String, Integer> pair2) {
 
             //sorts alphabetically
-            return pair1.getKey().compareTo(pair2.getKey());
+            int result = pair1.getKey().compareTo(pair2.getKey());
+
+            if (result == 0) {
+                result = pair1.getValue().compareTo(pair2.getValue());
+            }
+
+            return result;
         }
     }
 
@@ -276,7 +285,7 @@ public final class TagCloudGenerator {
             inputFile = input.readLine();
             in = new BufferedReader(new FileReader(inputFile));
         } catch (IOException error) {
-            System.out.println("invalid input file: " + error);
+            System.out.println("Error: invalid input file: " + error);
         }
 
         try {
@@ -285,7 +294,7 @@ public final class TagCloudGenerator {
             out = new PrintWriter(
                     new BufferedWriter(new FileWriter(outputFile)));
         } catch (IOException error) {
-            System.out.println("Invalid output file");
+            System.out.println("Error: invalid output file");
         }
 
         try {
@@ -293,11 +302,12 @@ public final class TagCloudGenerator {
                     "Enter the number of words to include in the Tag Cloud: ");
             n = Integer.parseInt(input.readLine());
         } catch (IOException error) {
-            System.out.println("error reading inputed number");
+            System.out.println("Error: could not read inputed number");
         }
 
-        if (n <= 0) {
-            System.out.println("Invalid number of words must be > 0");
+        if (n < 0) {
+            System.out.println(
+                    "Error: invalid input (number of words must be >= 0)");
         } else {
             //generates HTML headers for output file
             indexHeaders(out, inputFile, n);
@@ -310,17 +320,10 @@ public final class TagCloudGenerator {
                 in.close();
                 out.close();
             } catch (IOException error) {
-                System.err.println("error closing files");
+                System.err.println("Error: could not close files");
             }
 
-            System.out.println("finished!");
-
+            System.out.println("Tag Cloud created!");
         }
-<<<<<<< HEAD
-=======
-
-        System.out.println("Tag Cloud created!");
-
->>>>>>> branch 'master' of https://github.com/OhioStateCSE2231/project-10-repository-sp2023-216
     }
 }
