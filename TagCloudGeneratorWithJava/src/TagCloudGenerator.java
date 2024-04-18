@@ -15,10 +15,7 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
-//PROBLEMS AND QUESTIONS
-// is it ok to not use a sorting machine anymore and instead use collections.sort?
-// figure out how to not use reporter becuase that is part of components
-
+//test
 /**
  * TagCloudGenerator generates an HTML file displaying a tag cloud from an input
  * text file.
@@ -312,9 +309,7 @@ public final class TagCloudGenerator {
             try {
                 in.close();
                 out.close();
-            }
-
-            catch (IOException error) {
+            } catch (IOException error) {
                 System.err.println("error closing files");
             }
 
