@@ -8,11 +8,11 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -144,20 +144,19 @@ public final class TagCloudGenerator {
         }
 
         //sorted queue of map pairs based on counts
-        Queue<Map.Entry<String, Integer>> sortedWords = createSortedQueue(map,
-                n);
+        Map<String, Integer> sortedWords = createSortedMap(map, n);
 
-        while (sortedWords.size() > 0) {
-            Map.Entry<String, Integer> entry = sortedWords.remove();
-            String word = entry.getKey();
-            int count = entry.getValue();
+        for (Map.Entry<String, Integer> temp : sortedWords.entrySet()) {
+
+            String word = temp.getKey();
+            int count = temp.getValue();
 
             //calculates font size based on count
             int fontSize = calculateFontSize(count, minCount, maxCount);
 
             //outputs word with correct font size
             out.println("<span style=\"cursor:default\" class = \" f" + fontSize
-                    + "\" title = \"count: " + entry.getValue() + "\">" + word
+                    + "\" title = \"count: " + temp.getValue() + "\">" + word
                     + "</span>");
         }
         out.println("</p>");
@@ -182,14 +181,15 @@ public final class TagCloudGenerator {
         final int maxFontSize = 48;
 
         //compare min and max counts to calculate relative size of word
-        double relativeSize = ((double) count - minCount)
-                / (maxCount - minCount);
-
-        //calculate font size
-        int font = (int) Math.ceil(
-                relativeSize + relativeSize * (maxFontSize - minFontSize));
-
-        return font;
+        int fontSize = maxFontSize - minFontSize;
+        if (maxCount > minCount) {
+            fontSize = fontSize * (count - minCount);
+            fontSize = fontSize / (maxCount - minCount);
+            fontSize = fontSize + minFontSize;
+        } else {
+            fontSize = maxFontSize;
+        }
+        return fontSize;
     }
 
     /**
@@ -203,26 +203,33 @@ public final class TagCloudGenerator {
      * @requires map is not modified during the execution of this
      * @return a queue of words sorted into alphabetical order
      */
-    private static Queue<Map.Entry<String, Integer>> createSortedQueue(
+    private static Map<String, Integer> createSortedMap(
             Map<String, Integer> map, int n) {
-        Comparator<Map.Entry<String, Integer>> countOrder = new CountComparator();
 
-        List<Map.Entry<String, Integer>> list1 = new LinkedList<Map.Entry<String, Integer>>(
-                map.entrySet());
-        Collections.sort(list1, countOrder);
+        Map<String, Integer> sortedMap = null;
+        try {
+            Comparator<Map.Entry<String, Integer>> countOrder = new CountComparator();
 
-        List<Map.Entry<String, Integer>> list2 = list1.subList(0, n);
+            List<Map.Entry<String, Integer>> l1 = new LinkedList<Map.Entry<String, Integer>>(
+                    map.entrySet());
+            Collections.sort(l1, countOrder);
 
-        Comparator<Entry<String, Integer>> alphabeticalOrder = new WordComparator();
-        Collections.sort(list2, alphabeticalOrder);
+            List<Map.Entry<String, Integer>> list2 = l1.subList(0, n);
 
-        Queue<Map.Entry<String, Integer>> queue = new LinkedList<Map.Entry<String, Integer>>();
+            Comparator<Entry<String, Integer>> alphabeticalOrder = new WordComparator();
+            Collections.sort(list2, alphabeticalOrder);
 
-        for (int i = 0; i < list2.size(); i++) {
-            queue.add(list2.get(i));
+            sortedMap = new LinkedHashMap<String, Integer>();
+
+            for (int i = 0; i < list2.size(); i++) {
+                sortedMap.put(list2.get(i).getKey(), list2.get(i).getValue());
+            }
+        } catch (Exception e) {
+            System.err.println("error: file did not have enough words");
+
         }
 
-        return queue;
+        return sortedMap;
 
     }
 
@@ -322,6 +329,7 @@ public final class TagCloudGenerator {
                 out.close();
             } catch (IOException error) {
                 System.err.println("Error: could not close files");
+
             }
 
             System.out.println("Tag Cloud created!");

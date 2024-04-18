@@ -1,7 +1,0 @@
-this is a test; of seeing how?the project works with less words
-becuase it wasnt' working well with the super large project so 
-Im gonna try it with a smaller text file blah blah blah I just have to 
-find stuff to say and hopefully this works.  rahhhhh
-
-
-end
