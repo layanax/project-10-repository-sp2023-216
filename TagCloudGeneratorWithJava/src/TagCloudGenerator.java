@@ -316,5 +316,11 @@ public final class TagCloudGenerator {
             System.out.println("finished!");
 
         }
+<<<<<<< HEAD
+=======
+
+        System.out.println("Tag Cloud created!");
+
+>>>>>>> branch 'master' of https://github.com/OhioStateCSE2231/project-10-repository-sp2023-216
     }
 }
