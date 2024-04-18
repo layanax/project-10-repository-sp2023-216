@@ -144,8 +144,13 @@ public final class TagCloudGenerator {
                 minCount = Math.min(minCount, count);
             }
 
+<<<<<<< HEAD
             //sorted map of entries based on counts
             Map<String, Integer> sortedWords = createSortedMap(map, n);
+=======
+        //sorted map of pairs based on counts
+        Map<String, Integer> sortedWords = createSortedMap(map, n);
+>>>>>>> branch 'master' of https://github.com/OhioStateCSE2231/project-10-repository-sp2023-216.git
 
             for (Map.Entry<String, Integer> entry : sortedWords.entrySet()) {
                 String word = entry.getKey();
@@ -211,8 +216,8 @@ public final class TagCloudGenerator {
         try {
             Comparator<Map.Entry<String, Integer>> countOrder = new CountComparator();
 
-            List<Map.Entry<String, Integer>> l1 = new LinkedList<Map.Entry<String, Integer>>(
-                    map.entrySet());
+            List<Map.Entry<String, Integer>> l1;
+            l1 = new LinkedList<Map.Entry<String, Integer>>(map.entrySet());
             Collections.sort(l1, countOrder);
 
             List<Map.Entry<String, Integer>> list2 = l1.subList(0, n);
