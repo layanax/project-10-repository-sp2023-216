@@ -144,7 +144,8 @@ public final class TagCloudGenerator {
         }
 
         //sorted queue of map pairs based on counts
-        Queue<Map.Entry<String, Integer>> sortedWords = createSortedQueue(map, n);
+        Queue<Map.Entry<String, Integer>> sortedWords = createSortedQueue(map,
+                n);
 
         while (sortedWords.size() > 0) {
             Map.Entry<String, Integer> entry = sortedWords.remove();
@@ -324,14 +325,8 @@ public final class TagCloudGenerator {
             }
 
             System.out.println("Tag Cloud created!");
-<<<<<<< HEAD
-=======
 
->>>>>>> branch 'master' of https://github.com/OhioStateCSE2231/project-10-repository-sp2023-216.git
         }
-<<<<<<< HEAD
-=======
 
->>>>>>> branch 'master' of https://github.com/OhioStateCSE2231/project-10-repository-sp2023-216.git
     }
 }
