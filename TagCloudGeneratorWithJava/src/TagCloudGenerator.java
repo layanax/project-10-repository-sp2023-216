@@ -313,14 +313,9 @@ public final class TagCloudGenerator {
                 System.err.println("error closing files");
             }
 
-            System.out.println("finished!");
+            System.out.println("Tag Cloud created!");
 
         }
-<<<<<<< HEAD
-=======
 
-        System.out.println("Tag Cloud created!");
-
->>>>>>> branch 'master' of https://github.com/OhioStateCSE2231/project-10-repository-sp2023-216
     }
 }
