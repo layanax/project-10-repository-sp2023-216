@@ -13,7 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * TagCloudGenerator generates an HTML file displaying a tag cloud from an input
@@ -133,31 +132,33 @@ public final class TagCloudGenerator {
         out.println("<div class=\"cdiv\">");
         out.println("<p class = \"cbox\">");
 
-        //calculate font sizes for tag cloud
-        int maxCount = Integer.MIN_VALUE;
-        int minCount = Integer.MAX_VALUE;
-        Set<String> mapSeq = map.keySet();
-        for (String i : mapSeq) {
-            int count = map.get(i);
-            maxCount = Math.max(maxCount, count);
-            minCount = Math.min(minCount, count);
-        }
+        if (map.isEmpty()) {
+            out.println("<span>No words found in the input file.</span>");
+        } else {
+            //calculate minCount and maxCount
+            int maxCount = Integer.MIN_VALUE;
+            int minCount = Integer.MAX_VALUE;
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                int count = entry.getValue();
+                maxCount = Math.max(maxCount, count);
+                minCount = Math.min(minCount, count);
+            }
 
-        //sorted queue of map pairs based on counts
-        Map<String, Integer> sortedWords = createSortedMap(map, n);
+            //sorted map of entries based on counts
+            Map<String, Integer> sortedWords = createSortedMap(map, n);
 
-        for (Map.Entry<String, Integer> temp : sortedWords.entrySet()) {
+            for (Map.Entry<String, Integer> entry : sortedWords.entrySet()) {
+                String word = entry.getKey();
+                int count = entry.getValue();
 
-            String word = temp.getKey();
-            int count = temp.getValue();
+                //calculates font size based on count
+                int fontSize = calculateFontSize(count, minCount, maxCount);
 
-            //calculates font size based on count
-            int fontSize = calculateFontSize(count, minCount, maxCount);
-
-            //outputs word with correct font size
-            out.println("<span style=\"cursor:default\" class = \" f" + fontSize
-                    + "\" title = \"count: " + temp.getValue() + "\">" + word
-                    + "</span>");
+                //outputs word with correct font size
+                out.println("<span style=\"cursor:default\" class = \" f"
+                        + fontSize + "\" title = \"count: " + entry.getValue()
+                        + "\">" + word + "</span>");
+            }
         }
         out.println("</p>");
         out.println("</div>");
